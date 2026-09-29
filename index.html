@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="hr" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Č ili Ć Pogađalica</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Nunito', sans-serif; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(3deg); }
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(60px) rotate(360deg); opacity: 0; }
+    }
+
+    @keyframes starBurst {
+      0% { transform: scale(0) rotate(0deg); opacity: 1; }
+      100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+    }
+
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    .animate-pop { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    .animate-shake { animation: shake 0.5s ease-in-out; }
+    .animate-correct { animation: correctPulse 0.5s ease-in-out; }
+
+    .flower-icon {
+      display: inline-block;
+      animation: float 2.5s ease-in-out infinite;
+      cursor: default;
+      font-size: 1.1em;
+      vertical-align: middle;
+      line-height: 1;
+    }
+
+    .choice-btn {
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .choice-btn:hover {
+      transform: scale(1.1);
+    }
+    .choice-btn:active {
+      transform: scale(0.95);
+    }
+
+    .progress-dot {
+      transition: all 0.3s ease;
+    }
+
+    .word-display {
+      letter-spacing: 0.04em;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: confettiFall 1.2s ease-out forwards;
+    }
+
+    .star-burst {
+      position: absolute;
+      animation: starBurst 0.8s ease-out forwards;
+      pointer-events: none;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app-wrapper" class="h-full w-full overflow-auto" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #0f172a 100%);">
+   <!-- Decorative background elements -->
+   <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 0;">
+    <div style="position: absolute; top: 10%; left: 5%; font-size: 2rem; opacity: 0.08; animation: float 4s ease-in-out infinite;">
+     🌸
+    </div>
+    <div style="position: absolute; top: 30%; right: 8%; font-size: 1.8rem; opacity: 0.08; animation: float 5s ease-in-out infinite 1s;">
+     🌼
+    </div>
+    <div style="position: absolute; bottom: 20%; left: 10%; font-size: 2.2rem; opacity: 0.06; animation: float 4.5s ease-in-out infinite 0.5s;">
+     🌺
+    </div>
+    <div style="position: absolute; top: 60%; right: 15%; font-size: 1.5rem; opacity: 0.07; animation: float 3.5s ease-in-out infinite 1.5s;">
+     🌻
+    </div>
+   </div>
+   <div class="relative z-10 flex flex-col items-center justify-start min-h-full px-4 py-6 sm:py-8">
+    <!-- Header -->
+    <header class="text-center mb-6 sm:mb-8 animate-slide-up">
+     <h1 id="game-title" class="text-3xl sm:text-4xl font-900 mb-2" style="color: #f472b6;">Č ili Ć? 🌸</h1>
+     <p id="instruction-text" class="text-base sm:text-lg font-600" style="color: #94a3b8;">Klikni na točno slovo umjesto cvijeta!</p>
+    </header><!-- Score & Progress -->
+    <div id="score-area" class="flex items-center gap-4 sm:gap-6 mb-6 animate-slide-up" style="animation-delay: 0.1s;">
+     <div class="flex items-center gap-2 px-4 py-2 rounded-2xl" style="background: rgba(244, 114, 182, 0.12); border: 1px solid rgba(244, 114, 182, 0.25);">
+      <span style="color: #f472b6;">✓</span> <span id="correct-count" class="font-800 text-lg" style="color: #f472b6;">0</span> <span class="font-600 text-sm" style="color: #94a3b8;">/ <span id="total-display">10</span></span>
+     </div>
+     <div id="progress-dots" class="flex gap-1.5"></div>
+    </div><!-- Game Card -->
+    <main id="game-card" class="w-full max-w-lg rounded-3xl p-6 sm:p-10 mb-6 animate-slide-up" style="animation-delay: 0.2s; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.1); backdrop-filter: blur(10px);">
+     <!-- Question number -->
+     <div class="text-center mb-4">
+      <span id="question-num" class="text-sm font-700 px-3 py-1 rounded-full" style="background: rgba(244, 114, 182, 0.15); color: #f472b6;">Pitanje 1 / 10</span>
+     </div><!-- Word Display -->
+     <div id="word-container" class="text-center my-8">
+      <span id="word-display" class="word-display text-3xl sm:text-5xl font-900" style="color: #e2e8f0;"></span>
+     </div><!-- Choice Buttons -->
+     <div id="choices-container" class="flex justify-center gap-5 sm:gap-8 mt-6">
+      <button id="btn-c" class="choice-btn flex flex-col items-center gap-1 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-900 text-3xl sm:text-4xl focus:outline-none focus:ring-4 focus:ring-pink-400/40" style="background: linear-gradient(135deg, #831843, #9d174d); color: #fce7f3; border: 2px solid rgba(244, 114, 182, 0.3);" onclick="handleChoice('č')"> č <span class="text-xs font-600" style="color: #f9a8d4;"></span> </button> <button id="btn-cc" class="choice-btn flex flex-col items-center gap-1 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-900 text-3xl sm:text-4xl focus:outline-none focus:ring-4 focus:ring-pink-400/40" style="background: linear-gradient(135deg, #831843, #9d174d); color: #fce7f3; border: 2px solid rgba(244, 114, 182, 0.3);" onclick="handleChoice('ć')"> ć <span class="text-xs font-600" style="color: #f9a8d4;"></span> </button>
+     </div><!-- Feedback -->
+     <div id="feedback" class="text-center mt-6 h-10 flex items-center justify-center">
+      <span id="feedback-text" class="font-700 text-lg rounded-xl px-4 py-1"></span>
+     </div>
+    </main><!-- End Screen (hidden initially) -->
+    <div id="end-screen" class="hidden w-full max-w-lg rounded-3xl p-8 sm:p-10 text-center" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.1); backdrop-filter: blur(10px);">
+     <div id="end-emoji" class="text-6xl mb-4"></div>
+     <h2 id="end-title" class="text-2xl sm:text-3xl font-900 mb-2" style="color: #f472b6;"></h2>
+     <p id="end-message" class="text-lg mb-2" style="color: #94a3b8;"></p>
+     <p id="end-score" class="text-4xl font-900 mb-6" style="color: #e2e8f0;"></p><!-- Results breakdown -->
+     <div id="results-list" class="text-left mb-6 rounded-2xl p-4" style="background: rgba(15, 23, 42, 0.5);"></div><button id="restart-btn" onclick="startGame()" class="choice-btn px-8 py-4 rounded-2xl font-800 text-lg focus:outline-none focus:ring-4 focus:ring-pink-400/40" style="background: linear-gradient(135deg, #be185d, #9d174d); color: #fce7f3; border: 2px solid rgba(244, 114, 182, 0.3);"> 🔄 Igraj ponovo </button>
+    </div>
+    <footer class="mt-auto pt-6 text-center">
+     <p class="text-xs font-600" style="color: rgba(148, 163, 184, 0.4);">Vježba hrvatskog pravopisa</p>
+    </footer>
+   </div>
+  </div>
+  <script>
+    // Word database with correct letter info
+    const ALL_WORDS = [
+      { word: "mačka", letter: "č", pos: 2 },
+      { word: "kuća", letter: "ć", pos: 2 },
+      { word: "učiteljica", letter: "č", pos: 8 },
+      { word: "dječak", letter: "č", pos: 3 },
+      { word: "djevojčica", letter: "č", pos: 6 },
+      { word: "čokolada", letter: "č", pos: 0 },
+      { word: "ćevap", letter: "ć", pos: 0 },
+      { word: "noć", letter: "ć", pos: 2 },
+      { word: "cvijeće", letter: "ć", pos: 5 },
+      { word: "sreća", letter: "ć", pos: 3 },
+      { word: "ručak", letter: "č", pos: 2 },
+      { word: "večer", letter: "č", pos: 2 },
+      { word: "čaša", letter: "č", pos: 0 },
+      { word: "čarapa", letter: "č", pos: 0 },
+      { word: "čamac", letter: "č", pos: 0 },
+      { word: "čitati", letter: "č", pos: 0 },
+      { word: "čuvati", letter: "č", pos: 0 },
+      { word: "čisto", letter: "č", pos: 0 },
+      { word: "čudo", letter: "č", pos: 0 },
+      { word: "čekić", letter: "č", pos: 0 },
+      { word: "čaj", letter: "č", pos: 0 },
+      { word: "čestitka", letter: "č", pos: 0 },
+      { word: "kućica", letter: "ć", pos: 2 },
+      { word: "učionica", letter: "č", pos: 1 },
+      { word: "ploča", letter: "č", pos: 3 },
+      { word: "vruće", letter: "ć", pos: 3 },
+      { word: "svijeća", letter: "ć", pos: 5 },
+      { word: "ključ", letter: "č", pos: 4 },
+      { word: "vreća", letter: "ć", pos: 3 },
+      { word: "igračka", letter: "č", pos: 4 },
+      { word: "voće", letter: "ć", pos: 2 },
+      { word: "povrće", letter: "ć", pos: 4 },
+      { word: "liječnik", letter: "č", pos: 4 },
+      { word: "smeće", letter: "ć", pos: 3 },
+      { word: "moć", letter: "ć", pos: 2 },
+      { word: "čarolija", letter: "č", pos: 0 },
+      { word: "čipka", letter: "č", pos: 0 },
+      { word: "čvor", letter: "č", pos: 0 },
+      { word: "čačkalica", letter: "č", pos: 0 },
+      { word: "čitanje", letter: "č", pos: 0 },
+      { word: "čuvar", letter: "č", pos: 0 },
+      { word: "čudovište", letter: "č", pos: 0 },
+      { word: "čarobnjak", letter: "č", pos: 0 },
+      { word: "čaroban", letter: "č", pos: 0 },
+      { word: "čučati", letter: "č", pos: 0 },
+      { word: "čajnik", letter: "č", pos: 0 },
+      { word: "čelo", letter: "č", pos: 0 },
+      { word: "ćelav", letter: "ć", pos: 0 },
+      { word: "ćilim", letter: "ć", pos: 0 },
+      { word: "ćup", letter: "ć", pos: 0 },
+      { word: "kćerka", letter: "ć", pos: 1 },
+      { word: "ćufta", letter: "ć", pos: 0 },
+      { word: "ćevapčić", letter: "ć", pos: 0 },
+      { word: "ćirilica", letter: "ć", pos: 0 },
+      { word: "ćuk", letter: "ć", pos: 0 },
+    ];
+
+    // Also handle words with multiple č/ć — pick random position
+    // Build enhanced word list detecting all č/ć positions
+    const WORDS_DB = ALL_WORDS.map(w => {
+      const positions = [];
+      for (let i = 0; i < w.word.length; i++) {
+        if (w.word[i] === 'č' || w.word[i] === 'ć') {
+          positions.push({ index: i, letter: w.word[i] });
+        }
+      }
+      // Pick a random position to test
+      const pick = positions[Math.floor(Math.random() * positions.length)];
+      return { word: w.word, letter: pick.letter, pos: pick.index };
+    });
+
+    const FLOWERS = ['🌸', '🌺', '🌼', '🌻', '🌷', '💐', '🌹'];
+    const ROUND_COUNT = 10;
+
+    let gameWords = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+    let answered = false;
+    let results = [];
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function pickFlower() {
+      return FLOWERS[Math.floor(Math.random() * FLOWERS.length)];
+    }
+
+    function buildProgressDots() {
+      const container = document.getElementById('progress-dots');
+      container.innerHTML = '';
+      for (let i = 0; i < ROUND_COUNT; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot rounded-full';
+        dot.id = `dot-${i}`;
+        dot.style.width = '10px';
+        dot.style.height = '10px';
+        dot.style.background = 'rgba(148, 163, 184, 0.2)';
+        dot.style.border = '1px solid rgba(148, 163, 184, 0.15)';
+        container.appendChild(dot);
+      }
+    }
+
+    function updateDot(index, correct) {
+      const dot = document.getElementById(`dot-${index}`);
+      if (dot) {
+        dot.style.background = correct ? '#34d399' : '#f87171';
+        dot.style.border = correct ? '1px solid #34d399' : '1px solid #f87171';
+        dot.style.transform = 'scale(1.3)';
+        setTimeout(() => { dot.style.transform = 'scale(1)'; }, 300);
+      }
+    }
+
+    function displayWord(entry) {
+      const display = document.getElementById('word-display');
+      const before = entry.word.substring(0, entry.pos);
+      const after = entry.word.substring(entry.pos + 1);
+      const flower = pickFlower();
+
+      display.innerHTML = `${before}<span class="flower-icon">${flower}</span>${after}`;
+    }
+
+    function handleChoice(chosen) {
+      if (answered) return;
+      answered = true;
+
+      const entry = gameWords[currentIndex];
+      const isCorrect = chosen === entry.letter;
+
+      if (isCorrect) correctCount++;
+      results.push({ word: entry.word, correct: isCorrect, chosen, expected: entry.letter });
+
+      // Update score
+      document.getElementById('correct-count').textContent = correctCount;
+
+      // Update progress dot
+      updateDot(currentIndex, isCorrect);
+
+      // Show feedback
+      const feedbackText = document.getElementById('feedback-text');
+      if (isCorrect) {
+        feedbackText.textContent = `Točno! ✨ ${entry.word}`;
+        feedbackText.style.color = '#34d399';
+        feedbackText.style.background = 'rgba(52, 211, 153, 0.1)';
+        document.getElementById('game-card').classList.add('animate-correct');
+        createMiniConfetti();
+      } else {
+        feedbackText.textContent = `Netočno — ${entry.word} (${entry.letter})`;
+        feedbackText.style.color = '#f87171';
+        feedbackText.style.background = 'rgba(248, 113, 113, 0.1)';
+        document.getElementById('game-card').classList.add('animate-shake');
+      }
+
+      // Disable buttons briefly
+      document.getElementById('btn-c').style.opacity = chosen === 'č' ? '1' : '0.4';
+      document.getElementById('btn-cc').style.opacity = chosen === 'ć' ? '1' : '0.4';
+
+      // Highlight correct button
+      const correctBtn = entry.letter === 'č' ? 'btn-c' : 'btn-cc';
+      document.getElementById(correctBtn).style.background = isCorrect
+        ? 'linear-gradient(135deg, #065f46, #047857)'
+        : 'linear-gradient(135deg, #065f46, #047857)';
+
+      if (!isCorrect) {
+        const wrongBtn = entry.letter === 'č' ? 'btn-cc' : 'btn-c';
+        document.getElementById(wrongBtn).style.background = 'linear-gradient(135deg, #7f1d1d, #991b1b)';
+      }
+
+      // Reveal the letter in the word
+      const display = document.getElementById('word-display');
+      const before = entry.word.substring(0, entry.pos);
+      const after = entry.word.substring(entry.pos + 1);
+      const highlightColor = isCorrect ? '#34d399' : '#f87171';
+      display.innerHTML = `${before}<span style="color:${highlightColor}; text-decoration: underline; text-underline-offset: 4px;">${entry.letter}</span>${after}`;
+
+      setTimeout(() => {
+        document.getElementById('game-card').classList.remove('animate-correct', 'animate-shake');
+        if (currentIndex < ROUND_COUNT - 1) {
+          currentIndex++;
+          answered = false;
+          showQuestion();
+        } else {
+          showEndScreen();
+        }
+      }, 1500);
+    }
+
+    function createMiniConfetti() {
+      const card = document.getElementById('game-card');
+      const colors = ['#f472b6', '#34d399', '#fbbf24', '#60a5fa', '#c084fc'];
+      for (let i = 0; i < 12; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.left = `${30 + Math.random() * 40}%`;
+        piece.style.top = `${20 + Math.random() * 20}%`;
+        piece.style.animationDelay = `${Math.random() * 0.3}s`;
+        piece.style.animationDuration = `${0.8 + Math.random() * 0.5}s`;
+        card.style.position = 'relative';
+        card.appendChild(piece);
+        setTimeout(() => piece.remove(), 1500);
+      }
+    }
+
+    function showQuestion() {
+      const entry = gameWords[currentIndex];
+      document.getElementById('question-num').textContent = `Pitanje ${currentIndex + 1} / ${ROUND_COUNT}`;
+
+      // Reset buttons
+      const btnStyle = 'linear-gradient(135deg, #831843, #9d174d)';
+      document.getElementById('btn-c').style.background = btnStyle;
+      document.getElementById('btn-c').style.opacity = '1';
+      document.getElementById('btn-cc').style.background = btnStyle;
+      document.getElementById('btn-cc').style.opacity = '1';
+
+      // Clear feedback
+      document.getElementById('feedback-text').textContent = '';
+      document.getElementById('feedback-text').style.background = 'transparent';
+
+      // Show word with flower
+      displayWord(entry);
+
+      // Pop animation
+      const wordContainer = document.getElementById('word-container');
+      wordContainer.style.animation = 'none';
+      wordContainer.offsetHeight; // reflow
+      wordContainer.style.animation = 'popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+    }
+
+    function showEndScreen() {
+      document.getElementById('game-card').classList.add('hidden');
+      document.getElementById('score-area').classList.add('hidden');
+      const endScreen = document.getElementById('end-screen');
+      endScreen.classList.remove('hidden');
+      endScreen.classList.add('animate-pop');
+
+      const pct = Math.round((correctCount / ROUND_COUNT) * 100);
+      let emoji, title, msg;
+
+      if (pct === 100) {
+        emoji = '🏆'; title = 'Savršeno!'; msg = 'Sve si pogodio/la! Bravo!';
+      } else if (pct >= 80) {
+        emoji = '🌟'; title = 'Odlično!'; msg = 'Skoro savršeno, svaka čast!';
+      } else if (pct >= 60) {
+        emoji = '😊'; title = 'Dobro!'; msg = 'Na dobrom si putu, nastavi vježbati!';
+      } else if (pct >= 40) {
+        emoji = '💪'; title = 'Može bolje!'; msg = 'Probaj ponovo, sigurno možeš bolje!';
+      } else {
+        emoji = '📚'; title = 'Vježbaj dalje!'; msg = 'Č i ć su teški, ali ti to možeš!';
+      }
+
+      document.getElementById('end-emoji').textContent = emoji;
+      document.getElementById('end-title').textContent = title;
+      document.getElementById('end-message').textContent = msg;
+      document.getElementById('end-score').textContent = `${correctCount} / ${ROUND_COUNT}`;
+
+      // Build results list
+      const list = document.getElementById('results-list');
+      list.innerHTML = results.map((r, i) => {
+        const icon = r.correct ? '✅' : '❌';
+        const color = r.correct ? '#34d399' : '#f87171';
+        return `<div class="flex items-center justify-between py-2 ${i < results.length - 1 ? 'border-b' : ''}" style="border-color: rgba(148,163,184,0.1);">
+          <span class="font-700" style="color: #e2e8f0;">${icon} ${r.word}</span>
+          <span class="text-sm font-600" style="color: ${color};">${r.correct ? 'točno' : `tvoj odgovor: ${r.chosen}`}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function startGame() {
+      // Reset
+      currentIndex = 0;
+      correctCount = 0;
+      answered = false;
+      results = [];
+
+      // Pick 10 random unique words, re-randomize positions
+      const shuffled = shuffle(ALL_WORDS);
+      const uniqueWords = [];
+      const seen = new Set();
+      for (const w of shuffled) {
+        if (!seen.has(w.word) && uniqueWords.length < ROUND_COUNT) {
+          seen.add(w.word);
+          // Re-detect positions
+          const positions = [];
+          for (let i = 0; i < w.word.length; i++) {
+            if (w.word[i] === 'č' || w.word[i] === 'ć') {
+              positions.push({ index: i, letter: w.word[i] });
+            }
+          }
+          const pick = positions[Math.floor(Math.random() * positions.length)];
+          uniqueWords.push({ word: w.word, letter: pick.letter, pos: pick.index });
+        }
+      }
+      gameWords = uniqueWords;
+
+      // Show game card, hide end screen
+      document.getElementById('game-card').classList.remove('hidden');
+      document.getElementById('score-area').classList.remove('hidden');
+      document.getElementById('end-screen').classList.add('hidden');
+      document.getElementById('correct-count').textContent = '0';
+
+      buildProgressDots();
+      showQuestion();
+    }
+
+    // Elements SDK
+    const defaultConfig = {
+      game_title: 'Č ili Ć? 🌸',
+      instruction_text: 'Klikni na točno slovo umjesto cvijeta!',
+      background_color: '#0f172a',
+      surface_color: '#1e293b',
+      text_color: '#e2e8f0',
+      primary_action_color: '#f472b6',
+      secondary_action_color: '#94a3b8',
+      font_family: 'Nunito',
+      font_size: 16
+    };
+
+    function applyConfig(config) {
+      const bg = config.background_color || defaultConfig.background_color;
+      const surface = config.surface_color || defaultConfig.surface_color;
+      const text = config.text_color || defaultConfig.text_color;
+      const primary = config.primary_action_color || defaultConfig.primary_action_color;
+      const secondary = config.secondary_action_color || defaultConfig.secondary_action_color;
+      const font = config.font_family || defaultConfig.font_family;
+      const baseSize = config.font_size || defaultConfig.font_size;
+
+      // Background
+      const wrapper = document.getElementById('app-wrapper');
+      wrapper.style.background = `linear-gradient(135deg, ${bg} 0%, ${surface} 40%, ${bg} 100%)`;
+
+      // Title
+      const title = document.getElementById('game-title');
+      title.textContent = config.game_title || defaultConfig.game_title;
+      title.style.color = primary;
+      title.style.fontFamily = `${font}, Nunito, sans-serif`;
+      title.style.fontSize = `${baseSize * 2.2}px`;
+
+      // Instruction
+      const instr = document.getElementById('instruction-text');
+      instr.textContent = config.instruction_text || defaultConfig.instruction_text;
+      instr.style.color = secondary;
+      instr.style.fontFamily = `${font}, Nunito, sans-serif`;
+      instr.style.fontSize = `${baseSize * 1.1}px`;
+
+      // Game card
+      const card = document.getElementById('game-card');
+      card.style.background = `rgba(${hexToRgb(surface)}, 0.8)`;
+      card.style.borderColor = `rgba(${hexToRgb(secondary)}, 0.1)`;
+
+      // Word display
+      const wordDisplay = document.getElementById('word-display');
+      wordDisplay.style.color = text;
+      wordDisplay.style.fontFamily = `${font}, Nunito, sans-serif`;
+      wordDisplay.style.fontSize = `${baseSize * 3}px`;
+
+      // Question number
+      const qNum = document.getElementById('question-num');
+      qNum.style.background = `rgba(${hexToRgb(primary)}, 0.15)`;
+      qNum.style.color = primary;
+      qNum.style.fontSize = `${baseSize * 0.85}px`;
+
+      // Score area
+      const correctEl = document.getElementById('correct-count');
+      correctEl.style.color = primary;
+
+      // Buttons
+      const btnC = document.getElementById('btn-c');
+      const btnCC = document.getElementById('btn-cc');
+      [btnC, btnCC].forEach(btn => {
+        btn.style.fontFamily = `${font}, Nunito, sans-serif`;
+        btn.style.fontSize = `${baseSize * 2}px`;
+      });
+
+      // End screen
+      const endScreen = document.getElementById('end-screen');
+      endScreen.style.background = `rgba(${hexToRgb(surface)}, 0.8)`;
+      endScreen.style.borderColor = `rgba(${hexToRgb(secondary)}, 0.1)`;
+
+      const endTitle = document.getElementById('end-title');
+      endTitle.style.color = primary;
+      endTitle.style.fontFamily = `${font}, Nunito, sans-serif`;
+      endTitle.style.fontSize = `${baseSize * 1.8}px`;
+
+      const endMessage = document.getElementById('end-message');
+      endMessage.style.color = secondary;
+      endMessage.style.fontSize = `${baseSize}px`;
+
+      const endScore = document.getElementById('end-score');
+      endScore.style.color = text;
+      endScore.style.fontFamily = `${font}, Nunito, sans-serif`;
+      endScore.style.fontSize = `${baseSize * 2.5}px`;
+
+      const restartBtn = document.getElementById('restart-btn');
+      restartBtn.style.fontFamily = `${font}, Nunito, sans-serif`;
+      restartBtn.style.fontSize = `${baseSize * 1.1}px`;
+    }
+
+    function hexToRgb(hex) {
+      const h = hex.replace('#', '');
+      const r = parseInt(h.substring(0, 2), 16);
+      const g = parseInt(h.substring(2, 4), 16);
+      const b = parseInt(h.substring(4, 6), 16);
+      return `${r}, ${g}, ${b}`;
+    }
+
+    // Init Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          applyConfig(config);
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+            { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+            { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+            { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
+            { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); } },
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["game_title", config.game_title || defaultConfig.game_title],
+          ["instruction_text", config.instruction_text || defaultConfig.instruction_text]
+        ])
+      });
+    }
+
+    // Start game
+    startGame();
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ddd3b510455ec24',t:'MTc3Mzc2MzQ0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
